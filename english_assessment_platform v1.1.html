@@ -686,6 +686,13 @@ function startEvaluation() {
 }
 
 // ── Question renderer ──────────────────────────────────────────────────────
+function updateProgress() {
+  const pct = Math.round((currentQIdx/TOTAL_Q)*100);
+  document.getElementById('prog-label').textContent = 'Pregunta '+(currentQIdx+1)+' de '+TOTAL_Q;
+  document.getElementById('prog-pct').textContent = pct+'%';
+  document.getElementById('prog-fill').style.width = pct+'%';
+}
+
 function renderQuestion() {
   updateProgress();
   const q = QUESTIONS[currentQIdx];
@@ -693,6 +700,72 @@ function renderQuestion() {
   if (q.type==='voice') renderVoiceQ(q, container);
   else if (q.type==='listening') renderListeningQ(q, container);
   else renderMCQ(q, container);
+}
+
+function renderVoiceQ(q, container) {
+  const partId = 'v'+currentQIdx;
+  container.innerHTML = `
+    <div class="card">
+      <span class="q-type q-type-voice">🎙 Respuesta oral</span>
+      <span class="tech-tag">${q.tech}</span>
+      <h2>${q.question}</h2>
+      <div class="scenario-box">${q.scenario}</div>
+      <div class="recorder-wrap">
+        <div class="recorder-state">
+          <div class="rec-dot" id="dot-${partId}"></div>
+          <div class="rec-label" id="rlabel-${partId}">Listo para grabar</div>
+          <div class="rec-time" id="rtime-${partId}">0:00</div>
+        </div>
+        <canvas class="waveform" id="wave-${partId}"></canvas>
+        <div class="timer-wrap" id="timer-wrap-${partId}" style="display:none;">
+          <div class="timer-label"><span>Tiempo restante</span><span id="t-display-${partId}">2:00</span></div>
+          <div class="timer-track"><div class="timer-fill" id="t-fill-${partId}" style="width:100%;"></div></div>
+        </div>
+        <div class="playback-wrap" id="pb-${partId}">
+          <button class="mini-play" onclick="playBack('${partId}')">▶</button>
+          <span class="playback-label">Escucha tu respuesta</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-danger" id="btn-rec-${partId}" onclick="startRec('${partId}')">⏺ Iniciar grabación</button>
+        <button class="btn btn-success" id="btn-stop-${partId}" style="display:none;" onclick="stopRec('${partId}')">⏹ Terminar respuesta</button>
+        <button class="btn btn-primary" id="btn-next-voice" style="display:none;" onclick="nextQuestion()">Siguiente →</button>
+      </div>
+    </div>`;
+}
+
+function renderMCQ(q, container) {
+  const opts = q.options.map((o,i)=>`
+    <div class="mc-option" id="opt-${i}" onclick="selectMC(${i},${q.correct})">
+      <div class="mc-letter">${['A','B','C','D'][i]}</div>
+      <div class="mc-text">${o}</div>
+    </div>`).join('');
+  container.innerHTML = `
+    <div class="card">
+      <span class="q-type q-type-mc">● Opción múltiple</span>
+      <span class="tech-tag">${q.tech}</span>
+      <h2 style="margin-bottom:0.5rem;">${q.question}</h2>
+      <div class="mc-options">${opts}</div>
+      <div class="mc-feedback" id="mc-feedback"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-next-mc" style="display:none;" onclick="nextQuestion()">Siguiente →</button>
+      </div>
+    </div>`;
+}
+
+function selectMC(idx, correct) {
+  if (document.getElementById('btn-next-mc').style.display==='inline-flex') return;
+  document.querySelectorAll('.mc-option').forEach((el,i) => {
+    el.classList.remove('selected','correct','incorrect');
+    if (i===idx) el.classList.add(idx===correct?'correct':'incorrect');
+    if (i===correct && idx!==correct) el.classList.add('correct');
+  });
+  mcAnswers[currentQIdx] = idx===correct;
+  const fb = document.getElementById('mc-feedback');
+  const q = QUESTIONS[currentQIdx];
+  fb.className = 'mc-feedback visible ' + (idx===correct?'alert alert-success':'alert alert-warn');
+  fb.innerHTML = (idx===correct?'✓ Correct. ':'✗ Not quite. ') + q.explanation;
+  document.getElementById('btn-next-mc').style.display='inline-flex';
 }
 
 function getAudioSrc(qIdx) {
