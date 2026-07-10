@@ -836,49 +836,64 @@ function selectMC(idx, correct) {
   document.getElementById('btn-next-mc').style.display='inline-flex';
 }
 
-// ── Text-to-Speech playback ────────────────────────────────────────────────
+// ── Audio URLs (GitHub Pages) ─────────────────────────────────────────────
+const AUDIO_DATA = {
+  0: 'https://juanjocamacho0823-png.github.io/english-assessment/Pregunta_Business_Interview.mp3',
+  1: 'https://juanjocamacho0823-png.github.io/english-assessment/Pregunta_Film_Reviews.mp3'
+};
+let audioInstances = {};
+
+// ── Real audio playback ───────────────────────────────────────────────────
 function playTTS(qIdx) {
-  const q = QUESTIONS[qIdx];
   const btn = document.getElementById('listen-btn-'+qIdx);
   const meta = document.getElementById('listen-meta-'+qIdx);
   const fill = document.getElementById('listen-fill-'+qIdx);
-  const alert = document.getElementById('listen-alert-'+qIdx);
+  const alertEl = document.getElementById('listen-alert-'+qIdx);
   const qPanel = document.getElementById('listen-questions-'+qIdx);
   if (!btn || btn.disabled) return;
+
+  // Map question index to audio index (listening Q indexes in QUESTIONS array)
+  const listeningQIndexes = QUESTIONS.reduce((acc,q,i)=>{ if(q.type==='listening') acc.push(i); return acc; },[]);
+  const audioIdx = listeningQIndexes.indexOf(qIdx);
+  const src = AUDIO_DATA[audioIdx];
+  if (!src) { meta.textContent = 'Audio not found.'; return; }
+
   btn.disabled = true;
   btn.textContent = '⏸';
   meta.textContent = 'Playing…';
 
-  const utter = new SpeechSynthesisUtterance(q.audioText);
-  utter.lang = 'en-US';
-  utter.rate = 0.92;
-  utter.pitch = 1;
+  const audio = new Audio(src);
+  audioInstances[qIdx] = audio;
 
-  // Animate progress bar using estimated duration
-  const wordCount = q.audioText.split(' ').length;
-  const estMs = (wordCount / 2.8) * 1000; // ~2.8 words/sec at rate 0.92
-  let elapsed = 0;
-  const iv = setInterval(() => {
-    elapsed += 200;
-    fill.style.width = Math.min(elapsed / estMs * 100, 98) + '%';
-  }, 200);
+  audio.addEventListener('timeupdate', () => {
+    if (audio.duration) {
+      fill.style.width = (audio.currentTime / audio.duration * 100) + '%';
+    }
+  });
 
-  utter.onend = () => {
-    clearInterval(iv);
+  audio.addEventListener('ended', () => {
     fill.style.width = '100%';
     btn.textContent = '✓';
     btn.style.background = 'var(--accent)';
     meta.textContent = 'Audio complete — answer the questions below';
-    alert.className = 'alert alert-success';
-    alert.textContent = '✓ Audio finished. Answer all questions to continue.';
+    alertEl.className = 'alert alert-success';
+    alertEl.textContent = '✓ Audio finished. Answer all questions to continue.';
     qPanel.style.opacity = '1';
     qPanel.style.pointerEvents = 'auto';
     mcAnswers['listening_'+qIdx] = {};
-  };
+  });
 
-  utter.onerror = () => { clearInterval(iv); meta.textContent = 'Audio error — refresh and try again.'; };
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utter);
+  audio.addEventListener('error', () => {
+    btn.disabled = false;
+    btn.textContent = '▶';
+    meta.textContent = 'Error loading audio. Try again.';
+  });
+
+  audio.play().catch(() => {
+    btn.disabled = false;
+    btn.textContent = '▶';
+    meta.textContent = 'Tap play again to start audio.';
+  });
 }
 
 // HomeworX 2-question listener
