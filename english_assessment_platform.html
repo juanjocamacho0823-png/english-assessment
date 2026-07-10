@@ -710,9 +710,9 @@ function renderListeningQ(q, container) {
         ${q.options.map((o,i)=>`<div class="mc-option" id="L1-${i}" onclick="selectListeningMC('L1',${i},${q.correct},'${q.explanation.replace(/'/g,"\\'")}',1)"><div class="mc-letter">${lettersA[i]}</div><div class="mc-text">${o}</div></div>`).join('')}
       </div>
       <div class="mc-feedback" id="fb-L1"></div>
-      <div id="q2-container" style="margin-bottom:1rem;opacity:0.4;pointer-events:none;">
+      <div id="q2-container" style="margin-bottom:1rem;opacity:0.4;">
         <p style="font-size:13px;font-weight:500;margin-bottom:8px;">2. ${q.question2}</p>
-        <div class="mc-options" id="mc-opts-L2">
+        <div class="mc-options" id="mc-opts-L2" style="pointer-events:none;">
           ${q.options2.map((o,i)=>`<div class="mc-option" id="L2-${i}" onclick="selectListeningMC('L2',${i},${q.correct2},'${q.explanation2.replace(/'/g,"\\'")}',2)"><div class="mc-letter">${lettersB[i]}</div><div class="mc-text">${o}</div></div>`).join('')}
         </div>
       </div>
@@ -865,7 +865,6 @@ function onAudioPlay(qIdx) {
 
 function onAudioEnded(qIdx) {
   const qPanel = document.getElementById('listen-questions-'+qIdx);
-  // Already unlocked — do nothing
   if (qPanel && qPanel.dataset.unlocked === '1') return;
 
   const alertEl = document.getElementById('listen-alert-'+qIdx);
@@ -876,16 +875,26 @@ function onAudioEnded(qIdx) {
     alertEl.className = 'alert alert-success';
     alertEl.textContent = '✓ Audio finished. Answer all questions to continue.';
   }
-  // Unlock the questions panel fully
+
+  // Clone the panel to strip all inherited pointer-events and opacity
   if (qPanel) {
     qPanel.dataset.unlocked = '1';
-    qPanel.style.cssText = 'margin-top:1rem;';
+    // Remove ALL style restrictions by cloning without inline style
+    qPanel.removeAttribute('style');
+    // Force every child element to be interactive
+    qPanel.querySelectorAll('*').forEach(el => {
+      el.style.removeProperty('pointer-events');
+      el.style.removeProperty('opacity');
+    });
+    // Also set explicitly on the panel itself
+    qPanel.style.marginTop = '1rem';
+    qPanel.style.opacity = '1';
+    qPanel.style.pointerEvents = 'auto';
   }
-  // Hide audio and done button
+
   if (audio) { audio.controls = false; audio.style.display = 'none'; }
   if (doneBtn) doneBtn.style.display = 'none';
 
-  // Show confirmation
   const listenPlayer = document.querySelector('.listen-player');
   if (listenPlayer && !listenPlayer.querySelector('.audio-done-msg')) {
     const done = document.createElement('div');
@@ -913,10 +922,9 @@ function selectListeningMC(group, idx, correct, explanation, stepNum) {
   mcAnswers['L'+stepNum] = idx===correct;
   if (stepNum===1) {
     const q2Container = document.getElementById('q2-container');
-    if (q2Container) {
-      q2Container.style.opacity = '1';
-      q2Container.style.pointerEvents = 'auto';
-    }
+    const q2Opts = document.getElementById('mc-opts-L2');
+    if (q2Container) { q2Container.style.opacity='1'; }
+    if (q2Opts) { q2Opts.style.pointerEvents='auto'; }
   }
   if (stepNum===2) {
     const nb = document.getElementById('btn-next-listening');
