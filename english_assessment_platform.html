@@ -78,6 +78,18 @@
   .q-type { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; }
   .q-type-voice { background: var(--danger-light); color: var(--danger); }
   .q-type-mc { background: var(--accent-light); color: var(--accent); }
+  .q-type-listening { background: var(--success-light); color: var(--success); }
+
+  /* Listening player */
+  .listen-player { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin: 1rem 0; }
+  .listen-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .listen-play-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--success); border: none; cursor: pointer; color: white; font-size: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+  .listen-play-btn:disabled { background: var(--border); cursor: not-allowed; }
+  .listen-info { flex: 1; }
+  .listen-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .listen-meta { font-size: 12px; color: var(--ink-3); }
+  .listen-progress { height: 4px; background: var(--border); border-radius: 2px; margin-top: 8px; }
+  .listen-fill { height: 100%; background: var(--success); border-radius: 2px; width: 0%; transition: width 0.5s linear; }
 
   /* Tech tag */
   .tech-tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 20px; background: var(--surface-2); color: var(--ink-3); border: 1px solid var(--border); margin-bottom: 12px; }
@@ -220,12 +232,12 @@
       <div class="card-tag">Antes de comenzar</div>
       <h2>Este assessment usa tu voz</h2>
       <p style="font-size:14px; color:var(--ink-2); margin-top:6px;">Responderás 10 preguntas orales sobre escenarios reales de Change Management en tecnología (Microsoft, SAP, Google, AWS, Oracle, AI Adoption). También habrá preguntas de opción múltiple entre cada sección.</p>
-      <div class="alert alert-warn" style="margin-top:1rem;">⏱ Máximo 1 minuto por pregunta oral. Puedes detener la grabación antes si terminas tu respuesta.</div>
+      <div class="alert alert-warn" style="margin-top:1rem;">⏱ Máximo 2 minutos por pregunta oral. Puedes detener la grabación antes si terminas tu respuesta.</div>
       <div class="form-grid" style="margin-top:1.25rem;">
         <div class="form-row"><label>Nombre completo</label><input type="text" id="reg-name" placeholder="ej. Ana García"/></div>
-        <div class="form-row"><label>Rol / posición</label><input type="text" id="reg-role" placeholder="ej. Change Manager Sr."/></div>
+        <div class="form-row"><label>EID</label><input type="text" id="reg-eid" placeholder="ej. agarcía"/></div>
       </div>
-      <div class="form-row"><label>Nombre del manager</label><input type="text" id="reg-manager" placeholder="ej. Carlos Mendoza"/></div>
+      <div class="form-row"><label>Career Level (CL)</label><input type="text" id="reg-cl" placeholder="ej. 8, 9, 10…"/></div>
       <div class="btn-row"><button class="btn btn-primary" onclick="goToMicCheck()">Continuar → verificar micrófono</button></div>
     </div>
   </div>
@@ -275,13 +287,6 @@
           <div class="result-sub" id="res-sub"></div>
         </div>
         <div class="score-grid" id="res-scores"></div>
-        <div class="feedback-section">
-          <h3>Feedback general</h3>
-          <p id="res-feedback"></p>
-          <div class="strength-gap-grid" id="res-sg"></div>
-          <p style="font-size:13px; font-weight:500; margin-top:1.25rem; color:var(--ink-2);">Ruta de aprendizaje recomendada:</p>
-          <span class="path-badge" id="res-path"></span>
-        </div>
       </div>
       <p style="font-size:12px; color:var(--ink-3); text-align:center; margin-top:1rem;">Resultados guardados. Tu equipo de L&D hará seguimiento en los próximos 3 días hábiles.</p>
     </div>
@@ -330,8 +335,8 @@
       </div>
     </div>
     <table class="collab-table">
-      <thead><tr><th>Colaborador</th><th>Nivel</th><th>Score</th><th>Ruta recomendada</th><th>Fecha</th></tr></thead>
-      <tbody id="ld-tbody"><tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:2rem;font-size:13px;">Cargando…</td></tr></tbody>
+      <thead><tr><th>Colaborador</th><th>EID</th><th>CL</th><th>Nivel</th><th>Score</th><th>Ruta recomendada</th><th>Fecha</th></tr></thead>
+      <tbody id="ld-tbody"><tr><td colspan="7" style="text-align:center;color:var(--ink-3);padding:2rem;font-size:13px;">Cargando…</td></tr></tbody>
     </table>
   </div>
   <div class="card" style="padding:1.25rem 1.5rem;">
@@ -522,19 +527,53 @@ const QUESTIONS = [
     correct:2,
     explanation:'Change fatigue requires portfolio-level triage — not acceleration or full pause. Sequencing by impact, reducing unnecessary communications, and building in stabilization periods are evidence-based interventions that protect adoption quality.'
   },
-  // ── VOICE Q9: Executive sponsorship
+  // ── LISTENING 1: HomeworX interview
   {
-    type:'voice',
-    tech:'Executive Sponsorship',
-    question:'Activating a passive executive sponsor',
-    scenario:'You are managing a major technology transformation. Your executive sponsor, the CFO, has agreed to sponsor the program but is completely passive — they never attend steering committees, have not communicated to their team, and deflect every request for visible support. The program is 4 months from go-live. How do you address this as Change Manager?'
+    type:'listening',
+    tech:'Listening Comprehension',
+    question:'Business interview — HomeworX app',
+    audioText:`Presenter: Welcome to today's show. We're very happy to have Anna Oliveira as our guest today. Anna is the creator and founder of HomeworX – spelled with an x we should note – an app which helps teenagers with their homework. Thanks for coming in, Anna. Anna: Thanks for having me. Presenter: So, tell us about your app. How does it work? Anna: Well, teenagers and their parents have numerous challenges when it comes to homework these days. In many families both parents work and don't have much available time to help their kids with their homework. And even if they do have time to help, they may not be able to offer support with the content. What I mean is, they may not know, or at least remember, enough in any given subject to support. Presenter: You mean they might not be able to remember complex maths or might have never studied certain subjects, such as biology or economics, themselves? Anna: Exactly. So they might want to support their children with their homework, but have neither the time nor the knowledge to do so. Presenter: I see. So the app helps solve this problem? Anna: Yes, and more. The next issue is that tutors can be expensive, and there may be long waiting lists for specialist tutors in the town or region you live in. Our HomeworX app brings students and tutors together online. Students can search a database of pre-approved tutors and sign up for live online support. They don't need to be in the same town or city. Presenter: That sounds really great. Anna: It is. And this approach also enables us to offer the tutoring services at lower prices because there's no travelling time involved for the tutor to get to the student's home. And tutors who live in remote areas are happy to get access to more students, and be able to work from home, even at lower rates. Presenter: This all sounds great. So, how did you come up with the idea? Anna: Well, as you might guess, I was one of those parents I described earlier. I really wanted to help my son with his homework, but I was either too busy with work or I didn't actually know anything about the subjects he was having difficulty with. Also, we live in an area where there aren't many tutors and the ones that are there are either very expensive or have long waiting lists. Presenter: Yes. I can understand your predicament. Well, it sounds like a very useful app that is clearly meeting a need. And its popularity obviously speaks for itself. Anna: Thank you. Presenter: So, do you have plans for the future? Anna: We've just secured some funding and hope to expand the range of services we offer using the app. Presenter: We wish you the best of luck. Thanks again for coming in. That was Anna Oliveira, founder of the tutoring app HomeworX, which is available for both Apple and Android devices. Join us again next week for another business interview. Have a great week, everyone.`,
+    options:[
+      'Anna didn\'t start the company but manages it now.',
+      'Anna started the company and manages it now.',
+      'Anna started the company but doesn\'t manage it any more.'
+    ],
+    correct:1,
+    explanation:'Anna is described as the "creator and founder" who clearly still runs HomeworX — she speaks in first person about current operations and future plans.',
+    question2:'The app is for…',
+    options2:[
+      'parents to learn from.',
+      'students to learn from.',
+      'students who want to find a tutor.'
+    ],
+    correct2:2,
+    explanation2:'The app connects students with pre-approved tutors online — it\'s a tutoring platform, not a learning content platform.'
   },
-  // ── VOICE Q10: AI Ethics & Change
+  // ── LISTENING 2: Film review
   {
-    type:'voice',
-    tech:'AI Adoption',
-    question:'Navigating an AI ethics concern raised by employees',
-    scenario:'During a Microsoft Copilot deployment at a professional services firm, a group of senior consultants formally raises concerns: they believe the AI is being used to evaluate their performance without their consent, and that junior staff will be replaced by AI within 2 years. This concern has spread to 3 offices and is being discussed in a private Teams channel you discovered. How do you respond as Change Manager?'
+    type:'listening',
+    tech:'Listening Comprehension',
+    question:'Film review podcast',
+    audioText:`Obviously, this is the sequel to Fun in the City, which is a film I didn't like so it's fair to say my expectations were low. So, you could say I wasn't disappointed, as it met my expectations. It was awful! It was so awful, I'd rather not spend any more time on it by talking about it. But, that wouldn't be a film review and I think I owe you all a review to save you wasting your money going to see it. So, it starts off with this big wedding scene. And, I won't go into why, but the whole scene is just there so they can make this one joke. It's not even a funny joke, it's just terrible. It's got nothing to do with the rest of the film. Anyway, it starts there. Then, instead of the characters and the plot staying in New York where the original film was set, one of them wins a ticket to India and decides to take all her friends. It's what directors do when they've run out of ideas. Let's take our characters on tour! Anyway, they gossip, cry and shop, and they repeat this until the end. No real people would ever act like this. I didn't have any sympathy for their problems or even care what happened to them. Don't go and see it, you'll only encourage them to make another sequel. The world doesn't need three of these films. Please save your money and go and see the other big film this week: Twilight Mirror. So, if you're a fan of the book it's based on, you're probably as excited as I was about this. For everyone else, this is a film fans have been waiting ten years to see. I have to confess, I was a bit nervous. I'd seen the posters and they didn't look right. I didn't love them at all. And I wasn't sure about the actors they cast either. So I went in not sure what to expect. But I loved it. One thing I really liked about it was the pace. They went backwards and forwards between the real world and the computer world and it worked really well. The special effects brought the computer world to life and I totally believed in it. But, more than that, I felt emotionally connected to the story and the characters. The whole film worked on so many levels. It reminded me of going to the cinema as a child, how much fun that was. I can't recommend it enough.`,
+    options:['True','False'],
+    correct:1,
+    question1:'The reviewer didn\'t think she was going to enjoy the first film reviewed.',
+    explanation1:'False — she says her expectations were LOW because she didn\'t like the prequel, but she ends up not enjoying it either.',
+    question2:'The first scene of the first film is important for the rest of the film.',
+    correct2:1,
+    explanation2:'False — the reviewer explicitly says the opening wedding scene "has got nothing to do with the rest of the film."',
+    question3:'The reviewer was glad the first film was set in a different country.',
+    correct3:1,
+    explanation3:'False — she criticises the move to India as a sign directors "ran out of ideas."',
+    question4:'There is another sequel planned for the first film.',
+    correct4:1,
+    explanation4:'False — the reviewer says "the world doesn\'t need three of these films" and tells people not to see it to avoid encouraging a third.',
+    question5:'The reviewer had some doubts about the actors who were chosen for the second film.',
+    correct5:0,
+    explanation5:'True — she says "I wasn\'t sure about the actors they cast either."',
+    question6:'The second film made the reviewer think about her children.',
+    correct6:1,
+    explanation6:'False — it reminded her of going to the cinema as a CHILD herself, not about her children.'
   }
 ];
 
@@ -590,9 +629,10 @@ function switchRole(role) {
 // ── Registration ───────────────────────────────────────────────────────────
 function goToMicCheck() {
   const name = document.getElementById('reg-name').value.trim();
-  const role = document.getElementById('reg-role').value.trim();
-  if (!name||!role) { alert('Por favor completa tu nombre y rol.'); return; }
-  collab = { name, role, manager: document.getElementById('reg-manager').value.trim() };
+  const eid  = document.getElementById('reg-eid').value.trim();
+  const cl   = document.getElementById('reg-cl').value.trim();
+  if (!name||!eid) { alert('Por favor completa tu nombre y EID.'); return; }
+  collab = { name, eid, cl };
   document.getElementById('step-register').style.display='none';
   document.getElementById('step-miccheck').style.display='block';
 }
@@ -652,7 +692,74 @@ function renderQuestion() {
   const q = QUESTIONS[currentQIdx];
   const container = document.getElementById('question-container');
   if (q.type==='voice') renderVoiceQ(q, container);
+  else if (q.type==='listening') renderListeningQ(q, container);
   else renderMCQ(q, container);
+}
+
+function renderListeningQ(q, container) {
+  const isFilm = q.question.includes('Film');
+  const numQ = isFilm ? 6 : 2;
+  let mcHtml = '';
+
+  if (!isFilm) {
+    // HomeworX — 2 questions
+    const lettersA = ['A','B','C'];
+    const lettersB = ['A','B','C'];
+    mcHtml = `
+      <div class="mc-options" id="mc-opts-L1" style="margin-bottom:1rem;">
+        <p style="font-size:13px;font-weight:500;margin-bottom:8px;">1. Anna…</p>
+        ${q.options.map((o,i)=>`<div class="mc-option" id="L1-${i}" onclick="selectListeningMC('L1',${i},${q.correct},'${q.explanation.replace(/'/g,"\\'")}',1)"><div class="mc-letter">${lettersA[i]}</div><div class="mc-text">${o}</div></div>`).join('')}
+      </div>
+      <div class="mc-feedback" id="fb-L1"></div>
+      <div class="mc-options" id="mc-opts-L2" style="margin-bottom:1rem;opacity:0.4;pointer-events:none;">
+        <p style="font-size:13px;font-weight:500;margin-bottom:8px;">2. ${q.question2}</p>
+        ${q.options2.map((o,i)=>`<div class="mc-option" id="L2-${i}" onclick="selectListeningMC('L2',${i},${q.correct2},'${q.explanation2.replace(/'/g,"\\'")}',2)"><div class="mc-letter">${lettersB[i]}</div><div class="mc-text">${o}</div></div>`).join('')}
+      </div>
+      <div class="mc-feedback" id="fb-L2"></div>`;
+  } else {
+    // Film review — 6 True/False questions
+    const tfQs = [
+      {label:q.question1, correct:q.correct5===0?0:1, exp:q.explanation1},
+      {label:q.question2, correct:q.correct2===0?0:1, exp:q.explanation2},
+      {label:q.question3, correct:q.correct3===0?0:1, exp:q.explanation3},
+      {label:q.question4, correct:q.correct4===0?0:1, exp:q.explanation4},
+      {label:q.question5, correct:q.correct5===0?0:1, exp:q.explanation5},
+      {label:q.question6, correct:q.correct6===0?0:1, exp:q.explanation6},
+    ];
+    mcHtml = tfQs.map((tq,qi)=>`
+      <div style="margin-bottom:0.75rem;opacity:${qi===0?1:0.4};pointer-events:${qi===0?'auto':'none'};" id="tf-group-${qi}">
+        <p style="font-size:13px;font-weight:500;margin-bottom:6px;">${qi+1}. ${tq.label}</p>
+        <div class="mc-options" id="mc-opts-TF${qi}">
+          <div class="mc-option" id="TF${qi}-0" onclick="selectTF(${qi},0,${tq.correct},'${tq.exp.replace(/'/g,"\\'")}')"><div class="mc-letter">A</div><div class="mc-text">True</div></div>
+          <div class="mc-option" id="TF${qi}-1" onclick="selectTF(${qi},1,${tq.correct},'${tq.exp.replace(/'/g,"\\'")}')"><div class="mc-letter">B</div><div class="mc-text">False</div></div>
+        </div>
+        <div class="mc-feedback" id="fb-TF${qi}"></div>
+      </div>`).join('');
+  }
+
+  container.innerHTML = `
+    <div class="card">
+      <span class="q-type q-type-listening">👂 Listening</span>
+      <span class="tech-tag">${q.tech}</span>
+      <h2>${q.question}</h2>
+      <div class="listen-player">
+        <div class="listen-top">
+          <button class="listen-play-btn" id="listen-btn-${currentQIdx}" onclick="playTTS(${currentQIdx})">▶</button>
+          <div class="listen-info">
+            <div class="listen-title">${q.question}</div>
+            <div class="listen-meta" id="listen-meta-${currentQIdx}">Press play — audio plays once only</div>
+          </div>
+        </div>
+        <div class="listen-progress"><div class="listen-fill" id="listen-fill-${currentQIdx}"></div></div>
+      </div>
+      <div class="alert alert-info" id="listen-alert-${currentQIdx}">Listen carefully, then answer the questions below. No replay allowed.</div>
+      <div id="listen-questions-${currentQIdx}" style="margin-top:1rem; opacity:0.4; pointer-events:none;">
+        ${mcHtml}
+        <div class="btn-row" style="margin-top:1rem;">
+          <button class="btn btn-primary" id="btn-next-listening" style="display:none;" onclick="nextQuestion()">Siguiente →</button>
+        </div>
+      </div>
+    </div>`;
 }
 
 function updateProgress() {
@@ -670,10 +777,6 @@ function renderVoiceQ(q, container) {
       <span class="tech-tag">${q.tech}</span>
       <h2>${q.question}</h2>
       <div class="scenario-box">${q.scenario}</div>
-      <div class="timer-wrap">
-        <div class="timer-label"><span>Tiempo restante</span><span id="t-display">1:00</span></div>
-        <div class="timer-track"><div class="timer-fill" id="t-fill" style="width:100%;"></div></div>
-      </div>
       <div class="recorder-wrap">
         <div class="recorder-state">
           <div class="rec-dot" id="dot-${partId}"></div>
@@ -681,6 +784,10 @@ function renderVoiceQ(q, container) {
           <div class="rec-time" id="rtime-${partId}">0:00</div>
         </div>
         <canvas class="waveform" id="wave-${partId}"></canvas>
+        <div class="timer-wrap" id="timer-wrap-${partId}" style="display:none;">
+          <div class="timer-label"><span>Tiempo restante</span><span id="t-display-${partId}">2:00</span></div>
+          <div class="timer-track"><div class="timer-fill" id="t-fill-${partId}" style="width:100%;"></div></div>
+        </div>
         <div class="playback-wrap" id="pb-${partId}">
           <button class="mini-play" onclick="playBack('${partId}')">▶</button>
           <span class="playback-label">Escucha tu respuesta</span>
@@ -729,7 +836,96 @@ function selectMC(idx, correct) {
   document.getElementById('btn-next-mc').style.display='inline-flex';
 }
 
-// ── Recording ──────────────────────────────────────────────────────────────
+// ── Text-to-Speech playback ────────────────────────────────────────────────
+function playTTS(qIdx) {
+  const q = QUESTIONS[qIdx];
+  const btn = document.getElementById('listen-btn-'+qIdx);
+  const meta = document.getElementById('listen-meta-'+qIdx);
+  const fill = document.getElementById('listen-fill-'+qIdx);
+  const alert = document.getElementById('listen-alert-'+qIdx);
+  const qPanel = document.getElementById('listen-questions-'+qIdx);
+  if (!btn || btn.disabled) return;
+  btn.disabled = true;
+  btn.textContent = '⏸';
+  meta.textContent = 'Playing…';
+
+  const utter = new SpeechSynthesisUtterance(q.audioText);
+  utter.lang = 'en-US';
+  utter.rate = 0.92;
+  utter.pitch = 1;
+
+  // Animate progress bar using estimated duration
+  const wordCount = q.audioText.split(' ').length;
+  const estMs = (wordCount / 2.8) * 1000; // ~2.8 words/sec at rate 0.92
+  let elapsed = 0;
+  const iv = setInterval(() => {
+    elapsed += 200;
+    fill.style.width = Math.min(elapsed / estMs * 100, 98) + '%';
+  }, 200);
+
+  utter.onend = () => {
+    clearInterval(iv);
+    fill.style.width = '100%';
+    btn.textContent = '✓';
+    btn.style.background = 'var(--accent)';
+    meta.textContent = 'Audio complete — answer the questions below';
+    alert.className = 'alert alert-success';
+    alert.textContent = '✓ Audio finished. Answer all questions to continue.';
+    qPanel.style.opacity = '1';
+    qPanel.style.pointerEvents = 'auto';
+    mcAnswers['listening_'+qIdx] = {};
+  };
+
+  utter.onerror = () => { clearInterval(iv); meta.textContent = 'Audio error — refresh and try again.'; };
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utter);
+}
+
+// HomeworX 2-question listener
+let listeningAnswered = {};
+function selectListeningMC(group, idx, correct, explanation, stepNum) {
+  const opts = document.querySelectorAll(`#mc-opts-${group} .mc-option`);
+  opts.forEach((el,i) => {
+    el.classList.remove('selected','correct','incorrect');
+    if (i===idx) el.classList.add(idx===correct?'correct':'incorrect');
+    if (i===correct && idx!==correct) el.classList.add('correct');
+  });
+  document.querySelectorAll(`#mc-opts-${group} .mc-option`).forEach(el => el.style.pointerEvents='none');
+  const fb = document.getElementById('fb-'+group);
+  fb.className = 'mc-feedback visible ' + (idx===correct?'alert alert-success':'alert alert-warn');
+  fb.innerHTML = (idx===correct?'✓ Correct. ':'✗ Not quite. ') + explanation;
+  mcAnswers['L'+stepNum] = idx===correct;
+  if (stepNum===1) {
+    const g2 = document.getElementById('mc-opts-L2');
+    if (g2) { g2.parentElement.style.opacity='1'; g2.parentElement.style.pointerEvents='auto'; }
+  }
+  if (stepNum===2) {
+    const nb = document.getElementById('btn-next-listening');
+    if (nb) nb.style.display='inline-flex';
+  }
+}
+
+// Film review True/False — sequential unlock
+let tfProgress = 0;
+function selectTF(qi, idx, correct, explanation) {
+  const grp = document.getElementById(`mc-opts-TF${qi}`);
+  grp.querySelectorAll('.mc-option').forEach((el,i) => {
+    el.classList.remove('selected','correct','incorrect');
+    if (i===idx) el.classList.add(idx===correct?'correct':'incorrect');
+    if (i===correct && idx!==correct) el.classList.add('correct');
+  });
+  grp.querySelectorAll('.mc-option').forEach(el => el.style.pointerEvents='none');
+  const fb = document.getElementById('fb-TF'+qi);
+  fb.className = 'mc-feedback visible ' + (idx===correct?'alert alert-success':'alert alert-warn');
+  fb.innerHTML = (idx===correct?'✓ Correct. ':'✗ Not quite. ') + explanation;
+  mcAnswers['TF'+qi] = idx===correct;
+  const next = document.getElementById('tf-group-'+(qi+1));
+  if (next) { next.style.opacity='1'; next.style.pointerEvents='auto'; }
+  if (qi===5) {
+    const nb = document.getElementById('btn-next-listening');
+    if (nb) nb.style.display='inline-flex';
+  }
+}
 function startRec(partId) {
   if (!micStream) { alert('Micrófono no disponible.'); return; }
   clearInterval(evalTimer);
@@ -747,6 +943,7 @@ function startRec(partId) {
     document.getElementById('btn-stop-'+partId).style.display='none';
     document.getElementById('btn-next-voice').style.display='inline-flex';
     stopWaveform(partId); stopRecTimer(partId);
+    clearInterval(evalTimer);
   };
   mr.start(100);
   voiceAnswerCount++;
@@ -754,10 +951,13 @@ function startRec(partId) {
   document.getElementById('btn-stop-'+partId).style.display='inline-flex';
   document.getElementById('dot-'+partId).className='rec-dot recording';
   document.getElementById('rlabel-'+partId).textContent='Grabando…';
+  // Show and start timer NOW (when recording starts)
+  document.getElementById('timer-wrap-'+partId).style.display='block';
+  startEvalTimerQ(partId, 120);
   startWaveform(document.getElementById('wave-'+partId), micStream, partId);
   startRecTimer(partId);
-  // Auto-stop at 60s
-  setTimeout(()=>{if(mr.state==='recording'){mr.stop();}},60000);
+  // Auto-stop at 2 min
+  setTimeout(()=>{if(mr.state==='recording'){mr.stop();}},120000);
 }
 
 function stopRec(partId) {
@@ -776,16 +976,17 @@ function startRecTimer(partId) {
 
 function stopRecTimer(partId) { clearInterval(recTimers[partId]); }
 
-function startEvalTimerQ(seconds) {
-  const display=document.getElementById('t-display');
-  const fill=document.getElementById('t-fill');
+function startEvalTimerQ(partId, seconds) {
+  const display=document.getElementById('t-display-'+partId);
+  const fill=document.getElementById('t-fill-'+partId);
+  if (!display||!fill) return;
   let remaining=seconds;
   clearInterval(evalTimer);
   evalTimer=setInterval(()=>{
     remaining--;
     display.textContent=`${Math.floor(remaining/60)}:${(remaining%60).toString().padStart(2,'0')}`;
     fill.style.width=(remaining/seconds*100)+'%';
-    fill.style.background=remaining<15?'#dc2626':'#4f46e5';
+    fill.style.background=remaining<30?'#dc2626':'#4f46e5';
     if(remaining<=0){clearInterval(evalTimer);}
   },1000);
 }
@@ -874,16 +1075,17 @@ async function evaluateWithClaude() {
   const systemPrompt=`You are an expert English language assessor using the CEFR framework (A1–C2), specializing in spoken professional English for Change Management consultants at a global technology consulting firm (Accenture context).
 
 The candidate has completed:
-- 10 spoken questions on Change Management scenarios covering Microsoft, SAP, Google Workspace, AWS, Oracle, and AI Adoption
-- ${mcTotal} multiple choice questions (scored: ${mcCorrect}/${mcTotal} correct)
+- 8 spoken questions on Change Management scenarios (Microsoft, SAP, Google Workspace, AWS, Oracle, AI Adoption)
+- 2 listening comprehension sections with multiple choice questions (scored within MC total)
+- ${mcTotal} multiple choice questions total (scored: ${mcCorrect}/${mcTotal} correct)
 
 Evaluate the VOICE RECORDINGS provided across 4 dimensions (0–100):
 1. Fluency & spontaneity — natural rhythm, pacing, hesitations, self-repair
 2. Lexical range & CM vocabulary — Change Management terminology, tech adoption language, professional register
 3. Coherence & argumentation — logical structure, evidence-based reasoning, stakeholder framing
-4. Listening & comprehension — ability to process complex scenarios and respond accurately
+4. Listening & comprehension — factor the MC score on listening questions as the primary signal here
 
-Also factor the MC score (${mcCorrect}/${mcTotal}) as a signal of conceptual comprehension.
+Also factor the overall MC score (${mcCorrect}/${mcTotal}) as a signal of conceptual comprehension.
 
 Then produce:
 - Overall CEFR level (A1–C2)
@@ -906,16 +1108,16 @@ Respond ONLY with valid JSON, no markdown, no preamble:
     const data=await res.json();
     const text=data.content?.find(b=>b.type==='text')?.text||'{}';
     const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
-    return{...parsed,name:collab.name,role:collab.role,manager:collab.manager,mcScore:`${mcCorrect}/${mcTotal}`,date:new Date().toLocaleDateString('es-MX')};
+    return{...parsed,name:collab.name,eid:collab.eid,cl:collab.cl,mcScore:`${mcCorrect}/${mcTotal}`,date:new Date().toLocaleString('es-MX')};
   }catch(e){
     return{
-      name:collab.name,role:collab.role,manager:collab.manager,mcScore:`${mcCorrect}/${mcTotal}`,
+      name:collab.name,eid:collab.eid,cl:collab.cl,mcScore:`${mcCorrect}/${mcTotal}`,
       cefr:'B1',fluency:60,lexical:58,coherence:62,listening:55,overall:59,
       feedback:"Voice recordings were captured. Responses show intermediate professional English with functional Change Management vocabulary. Focus on expanding stakeholder communication register and technical adoption terminology.",
       strengths:["Uses basic CM process language (rollout, go-live, stakeholders)","Can structure a response with a beginning and conclusion","Demonstrates understanding of resistance management concepts"],
       gaps:["Limited use of advanced CM frameworks vocabulary (PROSCI, ADKAR, Kotter)","Difficulty expressing nuanced stakeholder dynamics in English","Technical terminology for cloud/ERP migrations needs strengthening"],
       path:"English for Tech Change Management (tutoring)",
-      date:new Date().toLocaleDateString('es-MX')
+      date:new Date().toLocaleString('es-MX')
     };
   }
 }
@@ -930,7 +1132,7 @@ function renderResults(r) {
   document.getElementById('results-loading').style.display='none';
   document.getElementById('results-content').style.display='block';
   const colors={A2:['#fef2f2','#b91c1c'],B1:['#fffbeb','#b45309'],B2:['#ecfdf5','#065f46'],C1:['#eeeeff','#4338ca'],C2:['#eeeeff','#4338ca']};
-  const desc={A2:'Básico — requiere soporte intensivo',B1:'Intermedio — gaps conversacionales',B2:'Intermedio alto — funcional en contextos profesionales',C1:'Avanzado — listo para roles internacionales',C2:'Competente — nivel casi nativo'};
+  const desc={A2:'Básico',B1:'Intermedio',B2:'Intermedio alto',C1:'Avanzado',C2:'Competente — nivel casi nativo'};
   const [bg,fg]=colors[r.cefr]||['#f0f0f8','#3d3d5c'];
   document.getElementById('res-badge').style.cssText=`background:${bg};color:${fg};`;
   document.getElementById('res-badge').textContent=r.cefr;
@@ -938,14 +1140,6 @@ function renderResults(r) {
   document.getElementById('res-sub').textContent=desc[r.cefr]||'';
   const dims=[{label:'Fluidez y espontaneidad',val:r.fluency,c:'#4f46e5'},{label:'Vocabulario CM',val:r.lexical,c:'#7c3aed'},{label:'Coherencia y argumentación',val:r.coherence,c:'#059669'},{label:'Comprensión auditiva',val:r.listening,c:'#d97706'}];
   document.getElementById('res-scores').innerHTML=dims.map(d=>`<div class="score-item"><div class="score-dim">${d.label}</div><div class="score-val" style="color:${d.c}">${d.val}</div><div class="score-bar"><div class="score-fill" style="width:${d.val}%;background:${d.c};"></div></div></div>`).join('');
-  document.getElementById('res-feedback').textContent=r.feedback;
-  const strengths=(r.strengths||[]).map(s=>`<li>${s}</li>`).join('');
-  const gaps=(r.gaps||[]).map(g=>`<li>${g}</li>`).join('');
-  document.getElementById('res-sg').innerHTML=`
-    <div class="sg-card" style="background:var(--success-light);"><h4 style="color:var(--success);">✓ Fortalezas</h4><ul style="color:#065f46;">${strengths}</ul></div>
-    <div class="sg-card" style="background:var(--warning-light);"><h4 style="color:var(--warning);">→ Áreas de mejora</h4><ul style="color:#92400e;">${gaps}</ul></div>`;
-  document.getElementById('res-path').textContent=r.path;
-  document.getElementById('res-path').style.cssText=`background:${bg};color:${fg};`;
 }
 
 // ── L&D Dashboard ──────────────────────────────────────────────────────────
@@ -975,21 +1169,47 @@ async function refreshDashboard(){
 function renderTable(results){
   const tbody=document.getElementById('ld-tbody');
   const filtered=currentFilter==='all'?results:results.filter(r=>r.cefr===currentFilter);
-  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:2rem;font-size:13px;">Sin resultados para este filtro.</td></tr>`;return;}
-  const pill={A2:'L-A2',B1:'L-B1',B2:'L-B2',C1:'L-C1',C2:'L-C1'};
+  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--ink-3);padding:2rem;font-size:13px;">Sin resultados para este filtro.</td></tr>`;return;}
   const avC=['#eeeeff','#ecfdf5','#fffbeb','#fef2f2'];
   const avT=['#4338ca','#065f46','#b45309','#b91c1c'];
   tbody.innerHTML=filtered.map((r,i)=>{
     const ini=r.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
     const ai=i%4; const pct=r.overall||0;
-    return`<tr>
-      <td><div class="name-cell"><div class="avatar" style="background:${avC[ai]};color:${avT[ai]};">${ini}</div><div><div style="font-weight:500;">${r.name}</div><div style="font-size:11px;color:var(--ink-3);">${r.role||''}</div></div></div></td>
+    const rid='detail-'+i;
+    const strengths=(r.strengths||'').toString().split('|').map(s=>`<li>${s.trim()}</li>`).join('');
+    const gaps=(r.gaps||'').toString().split('|').map(g=>`<li>${g.trim()}</li>`).join('');
+    return`<tr style="cursor:pointer;" onclick="toggleDetail('${rid}')">
+      <td><div class="name-cell"><div class="avatar" style="background:${avC[ai]};color:${avT[ai]};">${ini}</div><div style="font-weight:500;">${r.name}</div></div></td>
+      <td style="color:var(--ink-3);font-size:12px;">${r.eid||'—'}</td>
+      <td style="color:var(--ink-3);font-size:12px;">${r.cl||'—'}</td>
       <td><span class="level-pill ${pill[r.cefr]||''}">${r.cefr||'—'}</span></td>
       <td><div style="display:flex;align-items:center;gap:7px;"><div class="mini-bar"><div class="mini-fill" style="width:${pct}%;background:#4f46e5;"></div></div><span style="font-size:12px;color:var(--ink-3);">${pct}</span></div></td>
       <td style="font-size:12px;color:var(--ink-3);">${r.path||'—'}</td>
       <td style="font-size:12px;color:var(--ink-3);">${r.date||'—'}</td>
+    </tr>
+    <tr id="${rid}" style="display:none;">
+      <td colspan="7" style="background:var(--paper); padding:1rem 1.25rem;">
+        <p style="font-size:13px;font-weight:500;margin-bottom:6px;color:var(--ink);">Feedback</p>
+        <p style="font-size:13px;color:var(--ink-2);margin-bottom:1rem;">${r.feedback||'—'}</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div style="background:var(--success-light);border-radius:8px;padding:0.75rem 1rem;">
+            <p style="font-size:11px;font-weight:600;color:var(--success);margin-bottom:5px;text-transform:uppercase;">✓ Fortalezas</p>
+            <ul style="font-size:12px;color:#065f46;padding-left:1rem;line-height:1.7;">${strengths||'<li>—</li>'}</ul>
+          </div>
+          <div style="background:var(--warning-light);border-radius:8px;padding:0.75rem 1rem;">
+            <p style="font-size:11px;font-weight:600;color:var(--warning);margin-bottom:5px;text-transform:uppercase;">→ Áreas de mejora</p>
+            <ul style="font-size:12px;color:#92400e;padding-left:1rem;line-height:1.7;">${gaps||'<li>—</li>'}</ul>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--ink-3);margin-top:8px;">MC score: ${r.mcScore||'—'} · MC: haz click en la fila para cerrar</p>
+      </td>
     </tr>`;
   }).join('');
+}
+
+function toggleDetail(id){
+  const el=document.getElementById(id);
+  if(el) el.style.display=el.style.display==='none'?'table-row':'none';
 }
 
 function renderDistChart(results){
