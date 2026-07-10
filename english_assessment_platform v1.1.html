@@ -743,16 +743,17 @@ function renderListeningQ(q, container) {
       <span class="tech-tag">${q.tech}</span>
       <h2>${q.question}</h2>
       <div class="listen-player">
-        <div class="listen-top">
-          <button class="listen-play-btn" id="listen-btn-${currentQIdx}" onclick="playTTS(${currentQIdx})">▶</button>
-          <div class="listen-info">
-            <div class="listen-title">${q.question}</div>
-            <div class="listen-meta" id="listen-meta-${currentQIdx}">Press play — audio plays once only</div>
-          </div>
-        </div>
-        <div class="listen-progress"><div class="listen-fill" id="listen-fill-${currentQIdx}"></div></div>
+        <div class="listen-title" style="font-size:13px;font-weight:500;margin-bottom:8px;">${q.question} — play once only</div>
+        <audio id="listen-audio-${currentQIdx}"
+          src="${getAudioSrc(currentQIdx)}"
+          controls
+          controlsList="nodownload nofullscreen noremoteplayback"
+          style="width:100%;border-radius:8px;"
+          onplay="onAudioPlay(${currentQIdx})"
+          onended="onAudioEnded(${currentQIdx})">
+        </audio>
       </div>
-      <div class="alert alert-info" id="listen-alert-${currentQIdx}">Listen carefully, then answer the questions below. No replay allowed.</div>
+      <div class="alert alert-info" id="listen-alert-${currentQIdx}">Listen carefully, then answer the questions below. You can only play it once.</div>
       <div id="listen-questions-${currentQIdx}" style="margin-top:1rem; opacity:0.4; pointer-events:none;">
         ${mcHtml}
         <div class="btn-row" style="margin-top:1rem;">
@@ -843,57 +844,44 @@ const AUDIO_DATA = {
 };
 let audioInstances = {};
 
-// ── Real audio playback ───────────────────────────────────────────────────
-function playTTS(qIdx) {
-  const btn = document.getElementById('listen-btn-'+qIdx);
-  const meta = document.getElementById('listen-meta-'+qIdx);
-  const fill = document.getElementById('listen-fill-'+qIdx);
-  const alertEl = document.getElementById('listen-alert-'+qIdx);
-  const qPanel = document.getElementById('listen-questions-'+qIdx);
-  if (!btn || btn.disabled) return;
-
-  // Map question index to audio index (listening Q indexes in QUESTIONS array)
+// ── Native audio helpers ──────────────────────────────────────────────────
+function getAudioSrc(qIdx) {
   const listeningQIndexes = QUESTIONS.reduce((acc,q,i)=>{ if(q.type==='listening') acc.push(i); return acc; },[]);
   const audioIdx = listeningQIndexes.indexOf(qIdx);
-  const src = AUDIO_DATA[audioIdx];
-  if (!src) { meta.textContent = 'Audio not found.'; return; }
+  return AUDIO_DATA[audioIdx] || '';
+}
 
-  btn.disabled = true;
-  btn.textContent = '⏸';
-  meta.textContent = 'Playing…';
+function onAudioPlay(qIdx) {
+  // Lock after first play — disable controls after playback starts
+  const audio = document.getElementById('listen-audio-'+qIdx);
+  if (audio) {
+    audio.addEventListener('ended', () => {}, { once: true });
+  }
+}
 
-  const audio = new Audio(src);
-  audioInstances[qIdx] = audio;
-
-  audio.addEventListener('timeupdate', () => {
-    if (audio.duration) {
-      fill.style.width = (audio.currentTime / audio.duration * 100) + '%';
-    }
-  });
-
-  audio.addEventListener('ended', () => {
-    fill.style.width = '100%';
-    btn.textContent = '✓';
-    btn.style.background = 'var(--accent)';
-    meta.textContent = 'Audio complete — answer the questions below';
+function onAudioEnded(qIdx) {
+  const alertEl = document.getElementById('listen-alert-'+qIdx);
+  const qPanel = document.getElementById('listen-questions-'+qIdx);
+  const audio = document.getElementById('listen-audio-'+qIdx);
+  if (alertEl) {
     alertEl.className = 'alert alert-success';
     alertEl.textContent = '✓ Audio finished. Answer all questions to continue.';
+  }
+  if (qPanel) {
     qPanel.style.opacity = '1';
     qPanel.style.pointerEvents = 'auto';
-    mcAnswers['listening_'+qIdx] = {};
-  });
-
-  audio.addEventListener('error', () => {
-    btn.disabled = false;
-    btn.textContent = '▶';
-    meta.textContent = 'Error loading audio. Try again.';
-  });
-
-  audio.play().catch(() => {
-    btn.disabled = false;
-    btn.textContent = '▶';
-    meta.textContent = 'Tap play again to start audio.';
-  });
+  }
+  // Disable audio after it ends so they can't replay
+  if (audio) {
+    audio.controls = false;
+    audio.style.display = 'none';
+    const done = document.createElement('div');
+    done.className = 'alert alert-success';
+    done.style.marginBottom = '0';
+    done.textContent = '✓ Audio played — now answer the questions below.';
+    audio.parentElement.appendChild(done);
+  }
+  mcAnswers['listening_'+qIdx] = {};
 }
 
 // HomeworX 2-question listener
