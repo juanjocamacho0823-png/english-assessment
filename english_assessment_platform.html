@@ -710,9 +710,11 @@ function renderListeningQ(q, container) {
         ${q.options.map((o,i)=>`<div class="mc-option" id="L1-${i}" onclick="selectListeningMC('L1',${i},${q.correct},'${q.explanation.replace(/'/g,"\\'")}',1)"><div class="mc-letter">${lettersA[i]}</div><div class="mc-text">${o}</div></div>`).join('')}
       </div>
       <div class="mc-feedback" id="fb-L1"></div>
-      <div class="mc-options" id="mc-opts-L2" style="margin-bottom:1rem;opacity:0.4;pointer-events:none;">
+      <div id="q2-container" style="margin-bottom:1rem;opacity:0.4;pointer-events:none;">
         <p style="font-size:13px;font-weight:500;margin-bottom:8px;">2. ${q.question2}</p>
-        ${q.options2.map((o,i)=>`<div class="mc-option" id="L2-${i}" onclick="selectListeningMC('L2',${i},${q.correct2},'${q.explanation2.replace(/'/g,"\\'")}',2)"><div class="mc-letter">${lettersB[i]}</div><div class="mc-text">${o}</div></div>`).join('')}
+        <div class="mc-options" id="mc-opts-L2">
+          ${q.options2.map((o,i)=>`<div class="mc-option" id="L2-${i}" onclick="selectListeningMC('L2',${i},${q.correct2},'${q.explanation2.replace(/'/g,"\\'")}',2)"><div class="mc-letter">${lettersB[i]}</div><div class="mc-text">${o}</div></div>`).join('')}
+        </div>
       </div>
       <div class="mc-feedback" id="fb-L2"></div>`;
   } else {
@@ -851,26 +853,24 @@ function getAudioSrc(qIdx) {
 }
 
 function onAudioPlay(qIdx) {
-  // Lock after first play — disable controls after playback starts
-  const audio = document.getElementById('listen-audio-'+qIdx);
-  if (audio) {
-    audio.addEventListener('ended', () => {}, { once: true });
-  }
+  // Nothing needed here — just let it play
 }
 
 function onAudioEnded(qIdx) {
   const alertEl = document.getElementById('listen-alert-'+qIdx);
   const qPanel = document.getElementById('listen-questions-'+qIdx);
   const audio = document.getElementById('listen-audio-'+qIdx);
+
   if (alertEl) {
     alertEl.className = 'alert alert-success';
     alertEl.textContent = '✓ Audio finished. Answer all questions to continue.';
   }
+  // Unlock the full questions panel
   if (qPanel) {
-    qPanel.style.opacity = '1';
-    qPanel.style.pointerEvents = 'auto';
+    qPanel.removeAttribute('style');
+    qPanel.style.marginTop = '1rem';
   }
-  // Disable audio after it ends so they can't replay
+  // Hide audio player
   if (audio) {
     audio.controls = false;
     audio.style.display = 'none';
@@ -891,15 +891,18 @@ function selectListeningMC(group, idx, correct, explanation, stepNum) {
     el.classList.remove('selected','correct','incorrect');
     if (i===idx) el.classList.add(idx===correct?'correct':'incorrect');
     if (i===correct && idx!==correct) el.classList.add('correct');
+    el.style.pointerEvents = 'none';
   });
-  document.querySelectorAll(`#mc-opts-${group} .mc-option`).forEach(el => el.style.pointerEvents='none');
   const fb = document.getElementById('fb-'+group);
   fb.className = 'mc-feedback visible ' + (idx===correct?'alert alert-success':'alert alert-warn');
   fb.innerHTML = (idx===correct?'✓ Correct. ':'✗ Not quite. ') + explanation;
   mcAnswers['L'+stepNum] = idx===correct;
   if (stepNum===1) {
-    const g2 = document.getElementById('mc-opts-L2');
-    if (g2) { g2.parentElement.style.opacity='1'; g2.parentElement.style.pointerEvents='auto'; }
+    const q2Container = document.getElementById('q2-container');
+    if (q2Container) {
+      q2Container.style.opacity = '1';
+      q2Container.style.pointerEvents = 'auto';
+    }
   }
   if (stepNum===2) {
     const nb = document.getElementById('btn-next-listening');
