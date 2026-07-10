@@ -695,264 +695,165 @@ function renderQuestion() {
   else renderMCQ(q, container);
 }
 
+function getAudioSrc(qIdx) {
+  const AUDIO_URLS = {
+    0: 'https://cdn.jsdelivr.net/gh/juanjocamacho0823-png/english-assessment@main/Pregunta%20Business%20Interview.mp3',
+    1: 'https://cdn.jsdelivr.net/gh/juanjocamacho0823-png/english-assessment@main/Pregunta%20Film%20Reviews.mp3'
+  };
+  const listeningIdxs = QUESTIONS.reduce((acc,q,i)=>{ if(q.type==='listening') acc.push(i); return acc; },[]);
+  const audioIdx = listeningIdxs.indexOf(qIdx);
+  return AUDIO_URLS[audioIdx] || '';
+}
+
 function renderListeningQ(q, container) {
   const isFilm = q.question.includes('Film');
-  const numQ = isFilm ? 6 : 2;
-  let mcHtml = '';
+  const qIdx = currentQIdx;
+  const src = getAudioSrc(qIdx);
 
-  if (!isFilm) {
-    // HomeworX — 2 questions
-    const lettersA = ['A','B','C'];
-    const lettersB = ['A','B','C'];
-    mcHtml = `
-      <div class="mc-options" id="mc-opts-L1" style="margin-bottom:1rem;">
-        <p style="font-size:13px;font-weight:500;margin-bottom:8px;">1. Anna…</p>
-        ${q.options.map((o,i)=>`<div class="mc-option" id="L1-${i}" onclick="selectListeningMC('L1',${i},${q.correct},'${q.explanation.replace(/'/g,"\\'")}',1)"><div class="mc-letter">${lettersA[i]}</div><div class="mc-text">${o}</div></div>`).join('')}
-      </div>
-      <div class="mc-feedback" id="fb-L1"></div>
-      <div id="q2-container" style="margin-bottom:1rem;opacity:0.4;">
-        <p style="font-size:13px;font-weight:500;margin-bottom:8px;">2. ${q.question2}</p>
-        <div class="mc-options" id="mc-opts-L2" style="pointer-events:none;">
-          ${q.options2.map((o,i)=>`<div class="mc-option" id="L2-${i}" onclick="selectListeningMC('L2',${i},${q.correct2},'${q.explanation2.replace(/'/g,"\\'")}',2)"><div class="mc-letter">${lettersB[i]}</div><div class="mc-text">${o}</div></div>`).join('')}
-        </div>
-      </div>
-      <div class="mc-feedback" id="fb-L2"></div>`;
-  } else {
-    // Film review — 6 True/False questions
-    const tfQs = [
-      {label:q.question1, correct:q.correct5===0?0:1, exp:q.explanation1},
-      {label:q.question2, correct:q.correct2===0?0:1, exp:q.explanation2},
-      {label:q.question3, correct:q.correct3===0?0:1, exp:q.explanation3},
-      {label:q.question4, correct:q.correct4===0?0:1, exp:q.explanation4},
-      {label:q.question5, correct:q.correct5===0?0:1, exp:q.explanation5},
-      {label:q.question6, correct:q.correct6===0?0:1, exp:q.explanation6},
-    ];
-    mcHtml = tfQs.map((tq,qi)=>`
-      <div style="margin-bottom:0.75rem;opacity:${qi===0?1:0.4};pointer-events:${qi===0?'auto':'none'};" id="tf-group-${qi}">
-        <p style="font-size:13px;font-weight:500;margin-bottom:6px;">${qi+1}. ${tq.label}</p>
-        <div class="mc-options" id="mc-opts-TF${qi}">
-          <div class="mc-option" id="TF${qi}-0" onclick="selectTF(${qi},0,${tq.correct},'${tq.exp.replace(/'/g,"\\'")}')"><div class="mc-letter">A</div><div class="mc-text">True</div></div>
-          <div class="mc-option" id="TF${qi}-1" onclick="selectTF(${qi},1,${tq.correct},'${tq.exp.replace(/'/g,"\\'")}')"><div class="mc-letter">B</div><div class="mc-text">False</div></div>
-        </div>
-        <div class="mc-feedback" id="fb-TF${qi}"></div>
-      </div>`).join('');
-  }
+  container.innerHTML = '<div class="card">' +
+    '<span class="q-type q-type-listening">👂 Listening</span>' +
+    '<span class="tech-tag">' + q.tech + '</span>' +
+    '<h2>' + q.question + '</h2>' +
+    '<div class="listen-player" id="lp-' + qIdx + '">' +
+      '<p style="font-size:13px;font-weight:500;margin-bottom:8px;">Escucha el audio — solo se puede reproducir una vez</p>' +
+      '<audio id="la-' + qIdx + '" src="' + src + '" controls style="width:100%;border-radius:8px;"></audio>' +
+      '<button class="btn btn-success" id="lb-' + qIdx + '" style="margin-top:10px;width:100%;display:none;" onclick="unlockListening(' + qIdx + ')">✓ Terminé de escuchar — ver preguntas</button>' +
+    '</div>' +
+    '<div class="alert alert-info" id="la-alert-' + qIdx + '">Escucha el audio completo, luego responde las preguntas.</div>' +
+    '<div id="lq-' + qIdx + '"></div>' +
+  '</div>';
 
-  container.innerHTML = `
-    <div class="card">
-      <span class="q-type q-type-listening">👂 Listening</span>
-      <span class="tech-tag">${q.tech}</span>
-      <h2>${q.question}</h2>
-      <div class="listen-player">
-        <div class="listen-title" style="font-size:13px;font-weight:500;margin-bottom:8px;">${q.question} — play once only</div>
-        <audio id="listen-audio-${currentQIdx}"
-          src="${getAudioSrc(currentQIdx)}"
-          controls
-          controlsList="nodownload nofullscreen noremoteplayback"
-          style="width:100%;border-radius:8px;"
-          onplay="onAudioPlay(${currentQIdx})"
-          onended="onAudioEnded(${currentQIdx})">
-        </audio>
-        <button class="btn btn-success" id="btn-done-audio-${currentQIdx}" style="margin-top:10px;width:100%;display:none;" onclick="onAudioEnded(${currentQIdx})">
-          ✓ Terminé de escuchar — ver preguntas
-        </button>
-      </div>
-      <div class="alert alert-info" id="listen-alert-${currentQIdx}">Listen carefully, then answer the questions below. You can only play it once.</div>
-      <div id="listen-questions-${currentQIdx}" style="margin-top:1rem; opacity:0.4; pointer-events:none;">
-        ${mcHtml}
-        <div class="btn-row" style="margin-top:1rem;">
-          <button class="btn btn-primary" id="btn-next-listening" style="display:none;" onclick="nextQuestion()">Siguiente →</button>
-        </div>
-      </div>
-    </div>`;
-}
-
-function updateProgress() {
-  const pct = Math.round((currentQIdx/TOTAL_Q)*100);
-  document.getElementById('prog-label').textContent = `Pregunta ${currentQIdx+1} de ${TOTAL_Q}`;
-  document.getElementById('prog-pct').textContent = pct+'%';
-  document.getElementById('prog-fill').style.width = pct+'%';
-}
-
-function renderVoiceQ(q, container) {
-  const partId = 'v'+currentQIdx;
-  container.innerHTML = `
-    <div class="card">
-      <span class="q-type q-type-voice">🎙 Respuesta oral</span>
-      <span class="tech-tag">${q.tech}</span>
-      <h2>${q.question}</h2>
-      <div class="scenario-box">${q.scenario}</div>
-      <div class="recorder-wrap">
-        <div class="recorder-state">
-          <div class="rec-dot" id="dot-${partId}"></div>
-          <div class="rec-label" id="rlabel-${partId}">Listo para grabar</div>
-          <div class="rec-time" id="rtime-${partId}">0:00</div>
-        </div>
-        <canvas class="waveform" id="wave-${partId}"></canvas>
-        <div class="timer-wrap" id="timer-wrap-${partId}" style="display:none;">
-          <div class="timer-label"><span>Tiempo restante</span><span id="t-display-${partId}">2:00</span></div>
-          <div class="timer-track"><div class="timer-fill" id="t-fill-${partId}" style="width:100%;"></div></div>
-        </div>
-        <div class="playback-wrap" id="pb-${partId}">
-          <button class="mini-play" onclick="playBack('${partId}')">▶</button>
-          <span class="playback-label">Escucha tu respuesta</span>
-        </div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-danger" id="btn-rec-${partId}" onclick="startRec('${partId}')">⏺ Iniciar grabación</button>
-        <button class="btn btn-success" id="btn-stop-${partId}" style="display:none;" onclick="stopRec('${partId}')">⏹ Terminar respuesta</button>
-        <button class="btn btn-primary" id="btn-next-voice" style="display:none;" onclick="nextQuestion()">Siguiente →</button>
-      </div>
-    </div>`;
-  startEvalTimerQ(60);
-}
-
-function renderMCQ(q, container) {
-  const opts = q.options.map((o,i)=>`
-    <div class="mc-option" id="opt-${i}" onclick="selectMC(${i},${q.correct})">
-      <div class="mc-letter">${['A','B','C','D'][i]}</div>
-      <div class="mc-text">${o}</div>
-    </div>`).join('');
-  container.innerHTML = `
-    <div class="card">
-      <span class="q-type q-type-mc">● Opción múltiple</span>
-      <span class="tech-tag">${q.tech}</span>
-      <h2 style="margin-bottom:0.5rem;">${q.question}</h2>
-      <div class="mc-options">${opts}</div>
-      <div class="mc-feedback" id="mc-feedback"></div>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="btn-next-mc" style="display:none;" onclick="nextQuestion()">Siguiente →</button>
-      </div>
-    </div>`;
-}
-
-function selectMC(idx, correct) {
-  if (document.getElementById('btn-next-mc').style.display==='inline-flex') return;
-  document.querySelectorAll('.mc-option').forEach((el,i) => {
-    el.classList.remove('selected','correct','incorrect');
-    if (i===idx) el.classList.add(idx===correct?'correct':'incorrect');
-    if (i===correct && idx!==correct) el.classList.add('correct');
-  });
-  mcAnswers[currentQIdx] = idx===correct;
-  const fb = document.getElementById('mc-feedback');
-  const q = QUESTIONS[currentQIdx];
-  fb.className = 'mc-feedback visible ' + (idx===correct?'alert alert-success':'alert alert-warn');
-  fb.innerHTML = (idx===correct?'✓ Correct. ':'✗ Not quite. ') + q.explanation;
-  document.getElementById('btn-next-mc').style.display='inline-flex';
-}
-
-// ── Audio URLs (GitHub Pages) ─────────────────────────────────────────────
-const AUDIO_DATA = {
-  0: 'https://cdn.jsdelivr.net/gh/juanjocamacho0823-png/english-assessment@main/Pregunta%20Business%20Interview.mp3',
-  1: 'https://cdn.jsdelivr.net/gh/juanjocamacho0823-png/english-assessment@main/Pregunta%20Film%20Reviews.mp3'
-};
-let audioInstances = {};
-
-// ── Native audio helpers ──────────────────────────────────────────────────
-function getAudioSrc(qIdx) {
-  const listeningQIndexes = QUESTIONS.reduce((acc,q,i)=>{ if(q.type==='listening') acc.push(i); return acc; },[]);
-  const audioIdx = listeningQIndexes.indexOf(qIdx);
-  return AUDIO_DATA[audioIdx] || '';
-}
-
-function onAudioPlay(qIdx) {
-  // Show manual unlock button after 10 seconds as fallback
-  setTimeout(() => {
-    const btn = document.getElementById('btn-done-audio-'+qIdx);
-    if (btn) btn.style.display = 'block';
+  // Show button after 10s
+  setTimeout(function() {
+    var b = document.getElementById('lb-' + qIdx);
+    if (b) b.style.display = 'block';
   }, 10000);
+
+  // Hook ended event
+  var audioEl = document.getElementById('la-' + qIdx);
+  if (audioEl) {
+    audioEl.addEventListener('ended', function() { unlockListening(qIdx); });
+  }
 }
 
-function onAudioEnded(qIdx) {
-  const qPanel = document.getElementById('listen-questions-'+qIdx);
-  if (qPanel && qPanel.dataset.unlocked === '1') return;
+function unlockListening(qIdx) {
+  var panel = document.getElementById('lq-' + qIdx);
+  if (!panel || panel.dataset.unlocked) return;
+  panel.dataset.unlocked = '1';
 
-  const alertEl = document.getElementById('listen-alert-'+qIdx);
-  const audio = document.getElementById('listen-audio-'+qIdx);
-  const doneBtn = document.getElementById('btn-done-audio-'+qIdx);
+  var alertEl = document.getElementById('la-alert-' + qIdx);
+  var audio = document.getElementById('la-' + qIdx);
+  var btn = document.getElementById('lb-' + qIdx);
+  var player = document.getElementById('lp-' + qIdx);
 
-  if (alertEl) {
-    alertEl.className = 'alert alert-success';
-    alertEl.textContent = '✓ Audio finished. Answer all questions to continue.';
-  }
-
-  // Clone the panel to strip all inherited pointer-events and opacity
-  if (qPanel) {
-    qPanel.dataset.unlocked = '1';
-    // Remove ALL style restrictions by cloning without inline style
-    qPanel.removeAttribute('style');
-    // Force every child element to be interactive
-    qPanel.querySelectorAll('*').forEach(el => {
-      el.style.removeProperty('pointer-events');
-      el.style.removeProperty('opacity');
-    });
-    // Also set explicitly on the panel itself
-    qPanel.style.marginTop = '1rem';
-    qPanel.style.opacity = '1';
-    qPanel.style.pointerEvents = 'auto';
-  }
-
-  if (audio) { audio.controls = false; audio.style.display = 'none'; }
-  if (doneBtn) doneBtn.style.display = 'none';
-
-  const listenPlayer = document.querySelector('.listen-player');
-  if (listenPlayer && !listenPlayer.querySelector('.audio-done-msg')) {
-    const done = document.createElement('div');
-    done.className = 'alert alert-success audio-done-msg';
+  if (alertEl) { alertEl.className = 'alert alert-success'; alertEl.textContent = '✓ Audio terminado. Responde todas las preguntas.'; }
+  if (audio) { audio.pause(); audio.controls = false; audio.style.display = 'none'; }
+  if (btn) btn.style.display = 'none';
+  if (player) {
+    var done = document.createElement('div');
+    done.className = 'alert alert-success';
     done.style.marginTop = '8px';
-    done.textContent = '✓ Audio played — now answer the questions below.';
-    listenPlayer.appendChild(done);
+    done.textContent = '✓ Audio escuchado.';
+    player.appendChild(done);
   }
-  mcAnswers['listening_'+qIdx] = {};
+
+  var q = QUESTIONS[qIdx];
+  var isFilm = q.question.includes('Film');
+  if (!isFilm) { injectHomeworX(panel, q); } else { injectFilm(panel, q); }
 }
 
-// HomeworX 2-question listener
-let listeningAnswered = {};
-function selectListeningMC(group, idx, correct, explanation, stepNum) {
-  const opts = document.querySelectorAll(`#mc-opts-${group} .mc-option`);
-  opts.forEach((el,i) => {
+function injectHomeworX(panel, q) {
+  var html = '<div style="margin-top:1rem;">' +
+    '<p style="font-size:13px;font-weight:500;margin-bottom:8px;">1. Anna...</p>' +
+    '<div id="hw1">';
+  q.options.forEach(function(o,i) {
+    html += '<div class="mc-option" onclick="hwSelect1(' + i + ',' + q.correct + ',\'' + q.explanation.replace(/'/g,"\\'") + '\')"><div class="mc-letter">' + ['A','B','C'][i] + '</div><div class="mc-text">' + o + '</div></div>';
+  });
+  html += '</div><div id="hw1-fb" class="mc-feedback"></div></div>' +
+    '<div id="hw2" style="margin-top:1rem;display:none;">' +
+    '<p style="font-size:13px;font-weight:500;margin-bottom:8px;">2. ' + q.question2 + '</p>' +
+    '<div id="hw2-opts">';
+  q.options2.forEach(function(o,i) {
+    html += '<div class="mc-option" onclick="hwSelect2(' + i + ',' + q.correct2 + ',\'' + q.explanation2.replace(/'/g,"\\'") + '\')"><div class="mc-letter">' + ['A','B','C'][i] + '</div><div class="mc-text">' + o + '</div></div>';
+  });
+  html += '</div><div id="hw2-fb" class="mc-feedback"></div></div>' +
+    '<div class="btn-row"><button class="btn btn-primary" id="btn-next-listening" style="display:none;" onclick="nextQuestion()">Siguiente →</button></div>';
+  panel.innerHTML = html;
+}
+
+function hwSelect1(idx, correct, explanation) {
+  document.querySelectorAll('#hw1 .mc-option').forEach(function(el,i) {
+    el.onclick = null;
     el.classList.remove('selected','correct','incorrect');
     if (i===idx) el.classList.add(idx===correct?'correct':'incorrect');
     if (i===correct && idx!==correct) el.classList.add('correct');
-    el.style.pointerEvents = 'none';
   });
-  const fb = document.getElementById('fb-'+group);
+  var fb = document.getElementById('hw1-fb');
   fb.className = 'mc-feedback visible ' + (idx===correct?'alert alert-success':'alert alert-warn');
   fb.innerHTML = (idx===correct?'✓ Correct. ':'✗ Not quite. ') + explanation;
-  mcAnswers['L'+stepNum] = idx===correct;
-  if (stepNum===1) {
-    const q2Container = document.getElementById('q2-container');
-    const q2Opts = document.getElementById('mc-opts-L2');
-    if (q2Container) { q2Container.style.opacity='1'; }
-    if (q2Opts) { q2Opts.style.pointerEvents='auto'; }
-  }
-  if (stepNum===2) {
-    const nb = document.getElementById('btn-next-listening');
-    if (nb) nb.style.display='inline-flex';
-  }
+  mcAnswers['HW1'] = idx===correct;
+  var q2 = document.getElementById('hw2');
+  if (q2) q2.style.display = 'block';
 }
 
-// Film review True/False — sequential unlock
-let tfProgress = 0;
-function selectTF(qi, idx, correct, explanation) {
-  const grp = document.getElementById(`mc-opts-TF${qi}`);
-  grp.querySelectorAll('.mc-option').forEach((el,i) => {
+function hwSelect2(idx, correct, explanation) {
+  document.querySelectorAll('#hw2-opts .mc-option').forEach(function(el,i) {
+    el.onclick = null;
     el.classList.remove('selected','correct','incorrect');
     if (i===idx) el.classList.add(idx===correct?'correct':'incorrect');
     if (i===correct && idx!==correct) el.classList.add('correct');
   });
-  grp.querySelectorAll('.mc-option').forEach(el => el.style.pointerEvents='none');
-  const fb = document.getElementById('fb-TF'+qi);
+  var fb = document.getElementById('hw2-fb');
+  fb.className = 'mc-feedback visible ' + (idx===correct?'alert alert-success':'alert alert-warn');
+  fb.innerHTML = (idx===correct?'✓ Correct. ':'✗ Not quite. ') + explanation;
+  mcAnswers['HW2'] = idx===correct;
+  var nb = document.getElementById('btn-next-listening');
+  if (nb) nb.style.display = 'inline-flex';
+}
+
+function injectFilm(panel, q) {
+  var tfQs = [
+    {label:q.question1, correct:q.correct5===0?0:1, exp:q.explanation1},
+    {label:q.question2, correct:q.correct2===0?0:1, exp:q.explanation2},
+    {label:q.question3, correct:q.correct3===0?0:1, exp:q.explanation3},
+    {label:q.question4, correct:q.correct4===0?0:1, exp:q.explanation4},
+    {label:q.question5, correct:q.correct5===0?0:1, exp:q.explanation5},
+    {label:q.question6, correct:q.correct6===0?0:1, exp:q.explanation6}
+  ];
+  var html = '';
+  tfQs.forEach(function(tq,qi) {
+    html += '<div id="tf-g-' + qi + '" style="margin-bottom:0.75rem;' + (qi>0?'display:none;':'') + '">' +
+      '<p style="font-size:13px;font-weight:500;margin-bottom:6px;">' + (qi+1) + '. ' + tq.label + '</p>' +
+      '<div id="tf-o-' + qi + '">' +
+        '<div class="mc-option" onclick="filmTF(' + qi + ',0,' + tq.correct + ',\'' + tq.exp.replace(/'/g,"\\'") + '\')"><div class="mc-letter">A</div><div class="mc-text">True</div></div>' +
+        '<div class="mc-option" onclick="filmTF(' + qi + ',1,' + tq.correct + ',\'' + tq.exp.replace(/'/g,"\\'") + '\')"><div class="mc-letter">B</div><div class="mc-text">False</div></div>' +
+      '</div>' +
+      '<div id="tf-fb-' + qi + '" class="mc-feedback"></div>' +
+    '</div>';
+  });
+  html += '<div class="btn-row"><button class="btn btn-primary" id="btn-next-listening" style="display:none;" onclick="nextQuestion()">Siguiente →</button></div>';
+  panel.innerHTML = html;
+}
+
+function filmTF(qi, idx, correct, explanation) {
+  document.querySelectorAll('#tf-o-' + qi + ' .mc-option').forEach(function(el,i) {
+    el.onclick = null;
+    el.classList.remove('selected','correct','incorrect');
+    if (i===idx) el.classList.add(idx===correct?'correct':'incorrect');
+    if (i===correct && idx!==correct) el.classList.add('correct');
+  });
+  var fb = document.getElementById('tf-fb-' + qi);
   fb.className = 'mc-feedback visible ' + (idx===correct?'alert alert-success':'alert alert-warn');
   fb.innerHTML = (idx===correct?'✓ Correct. ':'✗ Not quite. ') + explanation;
   mcAnswers['TF'+qi] = idx===correct;
-  const next = document.getElementById('tf-group-'+(qi+1));
-  if (next) { next.style.opacity='1'; next.style.pointerEvents='auto'; }
+  var next = document.getElementById('tf-g-' + (qi+1));
+  if (next) next.style.display = 'block';
   if (qi===5) {
-    const nb = document.getElementById('btn-next-listening');
-    if (nb) nb.style.display='inline-flex';
+    var nb = document.getElementById('btn-next-listening');
+    if (nb) nb.style.display = 'inline-flex';
   }
 }
+
 function startRec(partId) {
   if (!micStream) { alert('Micrófono no disponible.'); return; }
   clearInterval(evalTimer);
